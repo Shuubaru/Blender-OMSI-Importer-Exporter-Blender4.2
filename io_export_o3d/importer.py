@@ -230,10 +230,10 @@ def _make_material(name: str, m: meshio.Material, o3d_path: Path,
     return mat
 
 
-def build_object(context: Context, mesh: meshio.Mesh, path: Path,
-                 merge_vertices: bool, weights: bool,
+def build_object(collection: bpy.types.Collection, mesh: meshio.Mesh,
+                 path: Path, merge_vertices: bool, weights: bool,
                  load_textures: bool) -> bpy.types.Object:
-    """Convert a `meshio.Mesh` into a Blender Object in the scene."""
+    """Convert a `meshio.Mesh` into a Blender Object in `collection`."""
     verts = mesh.vertices
     name = path.stem
 
@@ -318,7 +318,7 @@ def build_object(context: Context, mesh: meshio.Mesh, path: Path,
     me.update()
 
     obj = bpy.data.objects.new(name, me)
-    context.collection.objects.link(obj)
+    collection.objects.link(obj)
 
     # --- skin weights -> vertex groups --------------------------------
     if weights and mesh.bones:
@@ -371,11 +371,30 @@ class ImportO3D(Operator, ImportHelper):
         if not paths:
             paths = [Path(self.filepath)]
 
+        # several files: put them in a new Collection named after the
+        # folder. It is linked directly under the Scene Collection so
+        # it is a top-level collection, which is what the 1-0 number
+        # keys in the viewport toggle between
+        created = False
+        if len(paths) > 1:
+            col_name = folder.name or "O3D"
+            # reuse the collection if a previous import already made it
+            target = bpy.data.collections.get(col_name)
+            if target is None:
+                target = bpy.data.collections.new(col_name)
+                created = True
+            # make sure it is part of this scene (new, or previously
+            # unlinked); an existing one stays wherever it already is
+            if target not in context.scene.collection.children_recursive:
+                context.scene.collection.children.link(target)
+        else:
+            target = context.collection
+
         imported = []
         for path in paths:
             try:
                 mesh = load(path.read_bytes())
-                obj = build_object(context, mesh, path,
+                obj = build_object(target, mesh, path,
                                    self.merge_vertices, self.weights,
                                    self.textures)
             except (O3DImportError, OSError) as e:
@@ -384,26 +403,16 @@ class ImportO3D(Operator, ImportHelper):
             imported.append(obj)
 
         if not imported:
+            # nothing was imported, don't leave an empty collection behind
+            if created:
+                bpy.data.collections.remove(target)
             return {'CANCELLED'}
-
-        active = imported[-1]
-        # several files: group them under an Empty named after the folder
-        if len(imported) > 1:
-            parent = bpy.data.objects.new(folder.name or "O3D", None)
-            parent.empty_display_type = 'PLAIN_AXES'
-            context.collection.objects.link(parent)
-            # all objects sit at the world origin with identity
-            # transforms, so parenting needs no inverse matrix
-            for o in imported:
-                o.parent = parent
-            imported.append(parent)
-            active = parent
 
         for o in context.selected_objects:
             o.select_set(False)
         for o in imported:
             o.select_set(True)
-        context.view_layer.objects.active = active
+        context.view_layer.objects.active = imported[-1]
         return {'FINISHED'}
 
 

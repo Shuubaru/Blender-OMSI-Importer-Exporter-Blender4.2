@@ -40,13 +40,14 @@ from bpy.props import BoolProperty, EnumProperty, StringProperty, FloatVectorPro
 from .importer import ImportO3D, menu_func_import
 from .exporter import Exporter
 from .meshio import LongIndexesNotSupportedError
+from . import sidebar
 
 
 bl_info = {
     "name": "O3D Importer/Exporter",
     "description": "Import and Export selected object(s) to and from an OMSI Mesh file",
     "author": "Nathan Burnham (Road-hog123), Shuubaru, Claude AI",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (4, 2, 0),
     "location": "File > Import/Export > OMSI Mesh (.o3d)",
     "warning": "",
@@ -329,17 +330,6 @@ class OMSI_Exporter_Preferences(AddonPreferences):
     def draw(self, _: Context) -> None:
         layout = self.layout
         layout.prop(self, 'use_object_name')
-        
-class O3D_PT_sidebar(Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "OMSI"
-    bl_label = "OMSI Mesh"
-
-    def draw(self, context: Context) -> None:
-        col = self.layout.column(align=True)
-        col.operator(ImportO3D.bl_idname, text="Import .o3d", icon='IMPORT')
-        col.operator(ExportO3D.bl_idname, text="Export .o3d", icon='EXPORT')
 
 
 def menu_func_export(self, _: Context) -> None:
@@ -354,7 +344,7 @@ def register() -> None:
     TOPBAR_MT_file_export.append(menu_func_export)
     register_class(ImportO3D)
     TOPBAR_MT_file_import.append(menu_func_import)
-    register_class(O3D_PT_sidebar)
+    sidebar.register()
 
 
 def unregister() -> None:
@@ -365,7 +355,7 @@ def unregister() -> None:
     unregister_class(OMSI_Exporter_Preferences)
     TOPBAR_MT_file_import.remove(menu_func_import)
     unregister_class(ImportO3D)
-    unregister_class(O3D_PT_sidebar)
+    sidebar.unregister()
 
 
 if __name__ == "__main__":
