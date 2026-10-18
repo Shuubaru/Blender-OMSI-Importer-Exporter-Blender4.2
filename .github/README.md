@@ -4,15 +4,16 @@ Based on [Road-hog123's](https://github.com/Road-hog123/blender-omsi-exporter/re
 
 Disclaimer:
   - New features are strictly focused on vehicles' 3D objects. Not tested on static objects like buildings.
-  - Some of these features (like new Importer and Diffuse Color fix) were made using Claude AI assistance.
+  - Most of these features (like new Importer, Diffuse Color fix and Sidebar setup) were made using Claude AI assistance.
 
 ## New features and changes
 
 - Added import support: File > Import > Import OMSI Mesh (.o3d).
-- When importing, you can select multiple files at once. Multiple .o3d files are automatically parented to an Empty named after their source folder.
-- Added a sidebar panel (OMSI tab) with Import/Export buttons.
+- When importing, you can select multiple files at once. Multiple .o3d files are automatically grouped in a Collection named after their source folder, if a Collection is selected while importing a new 3D object, the new object is added automatically into that Collection.
+- Added a sidebar panel (OMSI tab) with Import/Export buttons, Diffuse Color editing and Collections toggler.
 
-  <img width="285" height="82" alt="image" src="https://github.com/user-attachments/assets/8f954a2b-26c0-4c43-a659-e85d5bdfb7e4" />
+  <img width="555" height="402" alt="image" src="https://github.com/user-attachments/assets/59a17856-35dd-4364-aa5d-6b7664b20749" />
+
 
 - Added "Diffuse on Textured Materials" export option to choose where the
   diffuse colour of textured materials comes from:
